@@ -30,21 +30,41 @@ export class TypeScriptPlugin {
     this.hooks = {
       'before:run:run': async () => {
         await this.compileTs()
+        await this.copyExtras()
+        await this.copyDependencies()
       },
       'before:offline:start': async () => {
         await this.compileTs()
+        await this.copyExtras()
+        await this.copyDependencies()
         this.watchAll()
       },
       'before:offline:start:init': async () => {
         await this.compileTs()
+        await this.copyExtras()
+        await this.copyDependencies()
         this.watchAll()
       },
-      'before:package:createDeploymentArtifacts': this.compileTs.bind(this),
-      'after:package:createDeploymentArtifacts': this.cleanup.bind(this),
-      'before:deploy:function:packageFunction': this.compileTs.bind(this),
-      'after:deploy:function:packageFunction': this.cleanup.bind(this),
+      'before:package:createDeploymentArtifacts': async () => {
+        await this.compileTs()
+        await this.copyExtras()
+        await this.copyDependencies(true)
+      },
+      'after:package:createDeploymentArtifacts': async () => {
+        await this.cleanup()
+      },
+      'before:deploy:function:packageFunction': async () => {
+        await this.compileTs()
+        await this.copyExtras()
+        await this.copyDependencies(true)
+      },
+      'after:deploy:function:packageFunction': async () => {
+        await this.cleanup()
+      },
       'before:invoke:local:invoke': async () => {
         const emitedFiles = await this.compileTs()
+        await this.copyExtras()
+        await this.copyDependencies()
         if (this.isWatching) {
           emitedFiles.forEach(filename => {
             const module = require.resolve(path.resolve(this.originalServicePath, filename))
@@ -130,12 +150,12 @@ export class TypeScriptPlugin {
     tsconfig.outDir = buildFolder
 
     const emitedFiles = await typescript.run(this.rootFileNames, tsconfig)
-    await this.copyExtras()
     this.serverless.cli.log('Typescript compiled.')
     return emitedFiles
   }
 
   async copyExtras() {
+<<<<<<< HEAD
     const outPkgPath = path.resolve(path.join(buildFolder, 'package.json'))
     const outModulesPath = path.resolve(path.join(buildFolder, 'node_modules'))
 
@@ -148,10 +168,13 @@ export class TypeScriptPlugin {
     if (!fs.existsSync(outPkgPath)) {
       await this.linkOrCopy(path.resolve('package.json'), outPkgPath, 'file')
     }
+=======
+    const { service } = this.serverless
+>>>>>>> aa453fd... fix: exclude development dependencies during packaging
 
     // include any "extras" from the "include" section
-    if (this.serverless.service.package.include && this.serverless.service.package.include.length > 0) {
-      const files = await globby(this.serverless.service.package.include)
+    if (service.package.include && service.package.include.length > 0) {
+      const files = await globby(service.package.include)
 
       for (const filename of files) {
         const destFileName = path.resolve(path.join(buildFolder, filename))
@@ -168,6 +191,44 @@ export class TypeScriptPlugin {
     }
   }
 
+<<<<<<< HEAD
+=======
+  /**
+   * Copy the `node_modules` folder and `package.json` files to the output
+   * directory.
+   * @param isPackaging Provided if serverless is packaging the service for deployment
+   */
+  async copyDependencies(isPackaging = false) {
+    const outPkgPath = path.resolve(path.join(BUILD_FOLDER, 'package.json'))
+    const outModulesPath = path.resolve(path.join(BUILD_FOLDER, 'node_modules'))
+
+    // copy development dependencies during packaging
+    if (isPackaging) {
+      if (fs.existsSync(outModulesPath)) {
+        fs.unlinkSync(outModulesPath)
+      }
+
+      fs.copySync(
+        path.resolve('node_modules'),
+        path.resolve(path.join(BUILD_FOLDER, 'node_modules'))
+      )
+    } else {
+      if (!fs.existsSync(outModulesPath)) {
+        await this.linkOrCopy(path.resolve('node_modules'), outModulesPath, 'junction')
+      }
+    }
+
+    // copy/link package.json
+    if (!fs.existsSync(outPkgPath)) {
+      await this.linkOrCopy(path.resolve('package.json'), outPkgPath, 'file')
+    }
+  }
+
+  /**
+   * Move built code to the serverless folder, taking into account individual
+   * packaging preferences.
+   */
+>>>>>>> aa453fd... fix: exclude development dependencies during packaging
   async moveArtifacts(): Promise<void> {
     await fs.copy(
       path.join(this.originalServicePath, buildFolder, serverlessFolder),
