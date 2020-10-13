@@ -1,13 +1,13 @@
-import * as path from 'path'
 import * as fs from 'fs-extra'
-
-import * as _ from 'lodash'
 import * as globby from 'globby'
-
-import { ServerlessOptions, ServerlessInstance, ServerlessFunction } from './types'
+import * as _ from 'lodash'
+import * as path from 'path'
+import { ServerlessInstance, ServerlessOptions } from './types'
 import * as typescript from './typescript'
-
 import { watchFiles } from './watchFiles'
+
+
+
 
 // Folders
 const serverlessFolder = '.serverless'
@@ -83,7 +83,7 @@ export class TypeScriptPlugin {
 
   get functions() {
     return this.options.function
-      ? { [this.options.function] : this.serverless.service.functions[this.options.function] }
+      ? { [this.options.function]: this.serverless.service.functions[this.options.function] }
       : this.serverless.service.functions
   }
 
@@ -155,22 +155,7 @@ export class TypeScriptPlugin {
   }
 
   async copyExtras() {
-<<<<<<< HEAD
-    const outPkgPath = path.resolve(path.join(buildFolder, 'package.json'))
-    const outModulesPath = path.resolve(path.join(buildFolder, 'node_modules'))
-
-    // Link or copy node_modules and package.json to .build so Serverless can
-    // exlcude devDeps during packaging
-    if (!fs.existsSync(outModulesPath)) {
-      await this.linkOrCopy(path.resolve('node_modules'), outModulesPath, 'junction')
-    }
-
-    if (!fs.existsSync(outPkgPath)) {
-      await this.linkOrCopy(path.resolve('package.json'), outPkgPath, 'file')
-    }
-=======
     const { service } = this.serverless
->>>>>>> aa453fd... fix: exclude development dependencies during packaging
 
     // include any "extras" from the "include" section
     if (service.package.include && service.package.include.length > 0) {
@@ -191,8 +176,6 @@ export class TypeScriptPlugin {
     }
   }
 
-<<<<<<< HEAD
-=======
   /**
    * Copy the `node_modules` folder and `package.json` files to the output
    * directory.
@@ -228,7 +211,6 @@ export class TypeScriptPlugin {
    * Move built code to the serverless folder, taking into account individual
    * packaging preferences.
    */
->>>>>>> aa453fd... fix: exclude development dependencies during packaging
   async moveArtifacts(): Promise<void> {
     await fs.copy(
       path.join(this.originalServicePath, buildFolder, serverlessFolder),
@@ -238,7 +220,7 @@ export class TypeScriptPlugin {
     if (this.options.function) {
       const fn = this.serverless.service.functions[this.options.function]
       const basename = path.basename(fn.package.artifact)
-      fn.package.artifact =  path.join(
+      fn.package.artifact = path.join(
         this.originalServicePath,
         serverlessFolder,
         path.basename(fn.package.artifact)
