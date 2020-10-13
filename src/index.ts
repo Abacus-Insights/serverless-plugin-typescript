@@ -182,8 +182,8 @@ export class TypeScriptPlugin {
    * @param isPackaging Provided if serverless is packaging the service for deployment
    */
   async copyDependencies(isPackaging = false) {
-    const outPkgPath = path.resolve(path.join(BUILD_FOLDER, 'package.json'))
-    const outModulesPath = path.resolve(path.join(BUILD_FOLDER, 'node_modules'))
+    const outPkgPath = path.resolve(path.join(buildFolder, 'package.json'))
+    const outModulesPath = path.resolve(path.join(buildFolder, 'node_modules'))
 
     // copy development dependencies during packaging
     if (isPackaging) {
@@ -193,7 +193,7 @@ export class TypeScriptPlugin {
 
       fs.copySync(
         path.resolve('node_modules'),
-        path.resolve(path.join(BUILD_FOLDER, 'node_modules'))
+        path.resolve(path.join(buildFolder, 'node_modules'))
       )
     } else {
       if (!fs.existsSync(outModulesPath)) {
